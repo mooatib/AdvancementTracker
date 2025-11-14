@@ -1,0 +1,7 @@
+name: AdvancementTracker
+version: 1.0.0
+main: com.dib.AdvancementTrackerPlugin
+description: A Minecraft plugin for tracking and displaying players advancements
+author: PaperMC
+website: https://github.com/mooatib/AdvancementTracker
+api-version: '1.21.10'
