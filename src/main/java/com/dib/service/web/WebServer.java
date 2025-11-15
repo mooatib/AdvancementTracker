@@ -2,30 +2,33 @@ package com.dib.service.web;
 
 import com.dib.service.advancement.AdvancementManager;
 import com.sun.net.httpserver.HttpServer;
+import org.bukkit.Server;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
 
 public class WebServer {
 
-    private final HttpServer server;
+    private final HttpServer httpServer;
     private final AdvancementManager advancementManager;
+    private final Server server;
 
-    public WebServer(AdvancementManager advancementManager) throws IOException {
+    public WebServer(AdvancementManager advancementManager, Server server) throws IOException {
         String host = "0.0.0.0";
         int port = 80;
-        this.server = HttpServer.create(new InetSocketAddress(host, port), 0);
+        this.server = server;
+        this.httpServer = HttpServer.create(new InetSocketAddress(host, port), 0);
         this.advancementManager = advancementManager;
     }
 
     public void start() throws IOException {
-        server.createContext("/", new HomepageHandler(advancementManager));
-        server.createContext("/textures", new TextureHandler());
-        server.start();
+        httpServer.createContext("/", new HomepageHandler(advancementManager, server));
+        httpServer.createContext("/textures", new TextureHandler());
+        httpServer.start();
     }
 
     public void stop() throws IOException {
-        server.stop(0);
+        httpServer.stop(0);
     }
 
 }

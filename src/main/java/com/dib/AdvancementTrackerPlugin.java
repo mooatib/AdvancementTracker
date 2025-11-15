@@ -21,7 +21,7 @@ public class AdvancementTrackerPlugin extends JavaPlugin {
         AdvancementCache cache = new AdvancementCache(repository);
         AdvancementManager manager = new AdvancementManager(cache);
         this.listener = new AdvancementListener(manager);
-        this.webServer = new WebServer(manager);
+        this.webServer = new WebServer(manager, this.getServer());
     }
 
     @Override
