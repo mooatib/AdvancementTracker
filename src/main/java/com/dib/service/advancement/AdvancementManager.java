@@ -1,10 +1,12 @@
 package com.dib.service.advancement;
 
 
+import com.dib.model.AdvancementMetadata;
 import com.dib.model.PlayerAdvancement;
 import com.dib.model.PlayerAdvancementProgress;
 import io.papermc.paper.advancement.AdvancementDisplay;
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.advancement.Advancement;
 import org.bukkit.advancement.AdvancementProgress;
 import org.bukkit.entity.Player;
@@ -60,11 +62,22 @@ public class AdvancementManager implements ComponentSerializer {
     private PlayerAdvancementProgress buildPlayerAdvancement(Player player, Advancement advancement) {
         AdvancementProgress progress = player.getAdvancementProgress(advancement);
         Map<String, Date> criteria = getCriteria(progress);
-        AdvancementDisplay display = Objects.requireNonNull(advancement.getDisplay());
-        String name = formatAdvancementTitle(display.displayName());
-        String description = serializeComponent(display.description());
+        AdvancementMetadata metadata = buildMetadata(advancement);
 
-        return new PlayerAdvancementProgress(advancement.getKey().toString(), name, description, progress.isDone(), criteria);
+        return new PlayerAdvancementProgress(advancement.getKey().toString(), metadata, progress.isDone(), criteria);
+    }
+
+    private AdvancementMetadata buildMetadata(Advancement advancement) {
+        AdvancementDisplay display = Objects.requireNonNull(advancement.getDisplay());
+        String title = formatAdvancementTitle(display.displayName());
+        String description = serializeComponent(display.description());
+        String iconName = getIconPath(display.icon().getType());
+
+        return new AdvancementMetadata(title, description, iconName);
+    }
+
+    private String getIconPath(Material iconMaterial) {
+        return iconMaterial.name().toLowerCase();
     }
 
     private Map<String, Date> getCriteria(AdvancementProgress progress) {

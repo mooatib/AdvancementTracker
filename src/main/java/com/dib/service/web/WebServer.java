@@ -19,7 +19,8 @@ public class WebServer {
     }
 
     public void start() throws IOException {
-        server.createContext("/", new Handler(advancementManager));
+        server.createContext("/", new HomepageHandler(advancementManager));
+        server.createContext("/textures", new TextureHandler());
         server.start();
     }
 
