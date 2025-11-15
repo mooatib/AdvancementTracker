@@ -3,6 +3,8 @@ package com.dib.service.advancement;
 
 import com.dib.model.PlayerAdvancement;
 import com.dib.model.PlayerAdvancementProgress;
+import io.papermc.paper.advancement.AdvancementDisplay;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.advancement.Advancement;
 import org.bukkit.advancement.AdvancementProgress;
@@ -18,32 +20,51 @@ public class AdvancementManager {
         this.advancementCache = advancementCache;
     }
 
-    public void updatePlayerAdvancement(Player player, Advancement advancement) {
-        UUID playerId = player.getUniqueId();
-        PlayerAdvancementProgress progress = buildPlayerAdvancement(player, advancement);
-        List<PlayerAdvancementProgress> advancements = advancementCache.get(playerId).advancements();
-        advancements.add(progress);
+    public Map<UUID, PlayerAdvancement> get() {
+        return advancementCache.get();
+    }
 
-        advancementCache.setPlayerAdvancement(playerId, new PlayerAdvancement(playerId, player.getName(), advancements));
+    public Map<UUID, PlayerAdvancement> getCompleted() {
+        return advancementCache.getCompleted();
+    }
+
+    public void updatePlayerAdvancement(Player player, Advancement advancement) {
+        if (!isRecipe(advancement)) {
+            UUID playerId = player.getUniqueId();
+            PlayerAdvancementProgress progress = buildPlayerAdvancement(player, advancement);
+
+            Map<String, PlayerAdvancementProgress> advancements = advancementCache.get(playerId).getAdvancements();
+            advancements.put(advancement.getKey().toString(), progress);
+
+            advancementCache.setPlayerAdvancement(playerId, new PlayerAdvancement(playerId, player.getName(), advancements));
+        }
     }
 
     public void loadPlayerAdvancements(Player player) {
         UUID playerId = player.getUniqueId();
         Iterator<Advancement> advancementIterator = Bukkit.advancementIterator();
-        List<PlayerAdvancementProgress> advancements = new ArrayList<>();
+        Map<String, PlayerAdvancementProgress> advancements = new HashMap<>();
         while (advancementIterator.hasNext()) {
             Advancement advancement = advancementIterator.next();
-            PlayerAdvancementProgress progress = buildPlayerAdvancement(player, advancement);
-            advancements.add(progress);
+            if (!isRecipe(advancement)) {
+                PlayerAdvancementProgress progress = buildPlayerAdvancement(player, advancement);
+                advancements.put(advancement.getKey().toString(), progress);
+            }
         }
-        PlayerAdvancement playerAdvancement = new PlayerAdvancement(playerId, player.getName(), advancements);
-        advancementCache.setPlayerAdvancement(playerId, playerAdvancement);
+        if (!advancements.isEmpty()) {
+            PlayerAdvancement playerAdvancement = new PlayerAdvancement(playerId, player.getName(), advancements);
+            advancementCache.setPlayerAdvancement(playerId, playerAdvancement);
+        }
     }
 
     private PlayerAdvancementProgress buildPlayerAdvancement(Player player, Advancement advancement) {
         AdvancementProgress progress = player.getAdvancementProgress(advancement);
         Map<String, Date> criteria = getCriteria(progress);
-        return new PlayerAdvancementProgress(advancement.getKey().toString(), progress.isDone(), criteria);
+        AdvancementDisplay display = Objects.requireNonNull(advancement.getDisplay());
+        Component name = display.displayName();
+        Component description = display.description();
+
+        return new PlayerAdvancementProgress(advancement.getKey().toString(), name, description, progress.isDone(), criteria);
     }
 
     private Map<String, Date> getCriteria(AdvancementProgress progress) {
@@ -52,5 +73,9 @@ public class AdvancementManager {
                 .map(criteria -> Map.entry(criteria, Objects.requireNonNull(progress.getDateAwarded(criteria))))
                 .filter(entry -> entry.getValue() != null)
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+    }
+
+    private boolean isRecipe(Advancement advancement) {
+        return advancement.getKey().toString().contains("minecraft:recipes");
     }
 }
