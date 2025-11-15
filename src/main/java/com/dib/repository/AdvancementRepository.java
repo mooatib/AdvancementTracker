@@ -7,7 +7,10 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.File;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.Statement;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -38,7 +41,7 @@ public class AdvancementRepository {
             pstmt.close();
 
             logger.info("Successfully saved advancement for player: " + playerAdvancement.getName());
-        } catch (SQLException e) {
+        } catch (Exception e) {
             logger.log(Level.SEVERE, "Failed to save player advancement for " + playerId, e);
         }
     }
@@ -65,7 +68,7 @@ public class AdvancementRepository {
             stmt.close();
 
             logger.info("Successfully loaded " + playerAdvancements.size() + " player advancements from database");
-        } catch (SQLException e) {
+        } catch (Exception e) {
             logger.log(Level.SEVERE, "Failed to load player advancements from database", e);
         }
 
@@ -76,22 +79,12 @@ public class AdvancementRepository {
         advancementDatabase.closeConnection();
     }
 
-    private String serializeAdvancements(Map<String, PlayerAdvancementProgress> advancements) {
-        try {
-            return objectMapper.writeValueAsString(advancements);
-        } catch (JsonProcessingException e) {
-            logger.log(Level.SEVERE, "Failed to serialize advancements", e);
-            return "{}";
-        }
+    private String serializeAdvancements(Map<String, PlayerAdvancementProgress> advancements) throws JsonProcessingException {
+        return objectMapper.writeValueAsString(advancements);
     }
 
-    private Map<String, PlayerAdvancementProgress> deserializeAdvancements(String json) {
-        try {
-            return objectMapper.readValue(json, new TypeReference<Map<String, PlayerAdvancementProgress>>() {
-            });
-        } catch (JsonProcessingException e) {
-            logger.log(Level.SEVERE, "Failed to deserialize advancements", e);
-            return new ConcurrentHashMap<>();
-        }
+    private Map<String, PlayerAdvancementProgress> deserializeAdvancements(String json) throws JsonProcessingException {
+        return objectMapper.readValue(json, new TypeReference<Map<String, PlayerAdvancementProgress>>() {
+        });
     }
 }
