@@ -313,7 +313,7 @@ public class Homepage {
                 """;
     }
 
-    public static String build(Map<UUID, PlayerAdvancement> playerAdvancements) {
+    public static String build(Map<UUID, PlayerAdvancement> playerAdvancements, int playerCount) {
         StringBuilder html = new StringBuilder();
         html.append("""
                 <!DOCTYPE html>
@@ -328,7 +328,7 @@ public class Homepage {
                         <h1>⛏️ Minecraft Server Advancements</h1>
                         <div class="server-info">Server: mc.araux.net | Players Online: %d</div>
                     </header>
-                """.formatted(playerAdvancements.size()));
+                """.formatted(playerCount));
 
         // Players grid
         html.append("        <div class=\"players-grid\">\n");
@@ -402,7 +402,7 @@ public class Homepage {
         return "/textures/" + iconName + ".png";
     }
 
-    public static byte[] renderPage(Map<UUID, PlayerAdvancement> playerAdvancements) {
-        return Homepage.build(playerAdvancements).getBytes();
+    public static byte[] renderPage(Map<UUID, PlayerAdvancement> playerAdvancements, int playerCount) {
+        return Homepage.build(playerAdvancements, playerCount).getBytes();
     }
 }
