@@ -1,5 +1,6 @@
 package com.dib;
 
+import com.dib.repository.AdvancementRepository;
 import com.dib.service.advancement.AdvancementCache;
 import com.dib.service.advancement.AdvancementListener;
 import com.dib.service.advancement.AdvancementManager;
@@ -12,18 +13,20 @@ import java.io.IOException;
 public class AdvancementTrackerPlugin extends JavaPlugin {
 
     private final WebServer webServer;
-    private final AdvancementListener advancementListener;
+    private final AdvancementListener listener;
+    private final AdvancementRepository repository;
 
     private AdvancementTrackerPlugin() throws IOException {
-        AdvancementCache advancementCache = new AdvancementCache();
-        AdvancementManager advancementManager = new AdvancementManager(advancementCache);
-        this.advancementListener = new AdvancementListener(advancementManager);
-        this.webServer = new WebServer(advancementManager);
+        this.repository = new AdvancementRepository(this.getLogger(), this.getDataFolder());
+        AdvancementCache cache = new AdvancementCache(repository);
+        AdvancementManager manager = new AdvancementManager(cache);
+        this.listener = new AdvancementListener(manager);
+        this.webServer = new WebServer(manager);
     }
 
     @Override
     public void onEnable() {
-        Bukkit.getPluginManager().registerEvents(advancementListener, this);
+        Bukkit.getPluginManager().registerEvents(listener, this);
         try {
             webServer.start();
         } catch (IOException e) {
@@ -35,6 +38,7 @@ public class AdvancementTrackerPlugin extends JavaPlugin {
     public void onDisable() {
         try {
             webServer.stop();
+            repository.close();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

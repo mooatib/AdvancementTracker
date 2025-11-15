@@ -13,7 +13,7 @@ public class WebServer {
 
     public WebServer(AdvancementManager advancementManager) throws IOException {
         String host = "0.0.0.0";
-        int port = 8080;
+        int port = 80;
         this.server = HttpServer.create(new InetSocketAddress(host, port), 0);
         this.advancementManager = advancementManager;
     }

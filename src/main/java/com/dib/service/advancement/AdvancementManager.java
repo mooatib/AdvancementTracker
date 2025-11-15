@@ -4,7 +4,6 @@ package com.dib.service.advancement;
 import com.dib.model.PlayerAdvancement;
 import com.dib.model.PlayerAdvancementProgress;
 import io.papermc.paper.advancement.AdvancementDisplay;
-import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.advancement.Advancement;
 import org.bukkit.advancement.AdvancementProgress;
@@ -13,7 +12,7 @@ import org.bukkit.entity.Player;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class AdvancementManager {
+public class AdvancementManager implements ComponentSerializer {
     private final AdvancementCache advancementCache;
 
     public AdvancementManager(AdvancementCache advancementCache) {
@@ -24,6 +23,7 @@ public class AdvancementManager {
         return advancementCache.get();
     }
 
+    //TODO : Remove unused
     public Map<UUID, PlayerAdvancement> getCompleted() {
         return advancementCache.getCompleted();
     }
@@ -61,8 +61,8 @@ public class AdvancementManager {
         AdvancementProgress progress = player.getAdvancementProgress(advancement);
         Map<String, Date> criteria = getCriteria(progress);
         AdvancementDisplay display = Objects.requireNonNull(advancement.getDisplay());
-        Component name = display.displayName();
-        Component description = display.description();
+        String name = formatAdvancementTitle(display.displayName());
+        String description = serializeComponent(display.description());
 
         return new PlayerAdvancementProgress(advancement.getKey().toString(), name, description, progress.isDone(), criteria);
     }

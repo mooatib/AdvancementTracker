@@ -2,8 +2,6 @@ package com.dib.model.web;
 
 import com.dib.model.PlayerAdvancement;
 import com.dib.model.PlayerAdvancementProgress;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 
 import java.util.Map;
 import java.util.UUID;
@@ -374,8 +372,8 @@ public class MainPage {
 
             for (PlayerAdvancementProgress advancement : player.getAdvancements().values()) {
                 if (advancement.completed()) {
-                    String name = formatAdvancementTitle(advancement.title());
-                    String description = serializeComponent(advancement.description());
+                    String name = advancement.title();
+                    String description = advancement.description();
                     String badgeClass = "advancement-badge";
                     String emoji = "✅ ";
 
@@ -401,15 +399,5 @@ public class MainPage {
 
     public static byte[] renderPage(Map<UUID, PlayerAdvancement> playerAdvancements) {
         return MainPage.build(playerAdvancements).getBytes();
-    }
-
-    private static String serializeComponent(Component component) {
-        return PlainTextComponentSerializer.plainText().serialize(component);
-
-    }
-
-    private static String formatAdvancementTitle(Component component) {
-        String serialized = serializeComponent(component);
-        return serialized.substring(1, serialized.length() - 1);
     }
 }
