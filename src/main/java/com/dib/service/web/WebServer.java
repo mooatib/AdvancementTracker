@@ -23,7 +23,8 @@ public class WebServer {
 
     public void start() throws IOException {
         httpServer.createContext("/", new HomepageHandler(advancementManager, server));
-        httpServer.createContext("/textures", new TextureHandler());
+        httpServer.createContext("/textures", new ResourceHandler("image/png"));
+        httpServer.createContext("/font", new ResourceHandler());
         httpServer.start();
     }
 
