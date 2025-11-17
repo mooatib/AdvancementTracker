@@ -18,8 +18,8 @@ public class AdvancementTrackerPlugin extends JavaPlugin {
 
     private AdvancementTrackerPlugin() throws IOException {
         this.repository = new AdvancementRepository(this.getLogger(), this.getDataFolder());
-        AdvancementCache cache = new AdvancementCache(repository);
-        AdvancementManager manager = new AdvancementManager(cache);
+        AdvancementCache cache = new AdvancementCache(repository.load());
+        AdvancementManager manager = new AdvancementManager(cache, repository);
         this.listener = new AdvancementListener(manager);
         this.webServer = new WebServer(manager, this.getServer());
     }

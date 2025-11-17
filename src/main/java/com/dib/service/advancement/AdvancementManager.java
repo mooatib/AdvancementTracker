@@ -4,6 +4,7 @@ package com.dib.service.advancement;
 import com.dib.model.AdvancementMetadata;
 import com.dib.model.PlayerAdvancement;
 import com.dib.model.PlayerAdvancementProgress;
+import com.dib.repository.AdvancementRepository;
 import io.papermc.paper.advancement.AdvancementDisplay;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -12,59 +13,51 @@ import org.bukkit.advancement.AdvancementProgress;
 import org.bukkit.entity.Player;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class AdvancementManager implements ComponentSerializer {
-    private final AdvancementCache advancementCache;
+    private final AdvancementCache cache;
+    private final AdvancementRepository repository;
 
-    public AdvancementManager(AdvancementCache advancementCache) {
-        this.advancementCache = advancementCache;
+    public AdvancementManager(AdvancementCache cache, AdvancementRepository repository) {
+        this.cache = cache;
+        this.repository = repository;
     }
 
     public Map<UUID, PlayerAdvancement> get() {
-        return advancementCache.get();
-    }
-
-    //TODO : Remove unused
-    public Map<UUID, PlayerAdvancement> getCompleted() {
-        return advancementCache.getCompleted();
+        return cache.get();
     }
 
     public void updatePlayerAdvancement(Player player, Advancement advancement) {
         if (!isRecipe(advancement)) {
-            UUID playerId = player.getUniqueId();
             PlayerAdvancementProgress progress = buildPlayerAdvancement(player, advancement);
-
-            Map<String, PlayerAdvancementProgress> advancements = advancementCache.get(playerId).getAdvancements();
-            advancements.put(advancement.getKey().toString(), progress);
-
-            advancementCache.setPlayerAdvancement(playerId, new PlayerAdvancement(playerId, player.getName(), advancements));
+            if (!repository.isAdvancementExisting(progress.key())) {
+                repository.saveAdvancement(progress.key(), progress.metadata());
+            }
+            if (progress.awarded()) {
+                cache.putPlayerAdvancement(player.getUniqueId(), player.getName(), progress);
+                repository.savePlayerAdvancement(player.getUniqueId(), player.getName(), progress);
+            }
         }
     }
 
+    public int countAdvancements() {
+        return repository.countAdvancements();
+    }
+
     public void loadPlayerAdvancements(Player player) {
-        UUID playerId = player.getUniqueId();
         Iterator<Advancement> advancementIterator = Bukkit.advancementIterator();
-        Map<String, PlayerAdvancementProgress> advancements = new HashMap<>();
         while (advancementIterator.hasNext()) {
-            Advancement advancement = advancementIterator.next();
-            if (!isRecipe(advancement)) {
-                PlayerAdvancementProgress progress = buildPlayerAdvancement(player, advancement);
-                advancements.put(advancement.getKey().toString(), progress);
-            }
+            updatePlayerAdvancement(player, advancementIterator.next());
         }
-        if (!advancements.isEmpty()) {
-            PlayerAdvancement playerAdvancement = new PlayerAdvancement(playerId, player.getName(), advancements);
-            advancementCache.setPlayerAdvancement(playerId, playerAdvancement);
-        }
+
     }
 
     private PlayerAdvancementProgress buildPlayerAdvancement(Player player, Advancement advancement) {
         AdvancementProgress progress = player.getAdvancementProgress(advancement);
-        Map<String, Date> criteria = getCriteria(progress);
+        Date awardedDate = getAwardedDate(progress);
         AdvancementMetadata metadata = buildMetadata(advancement);
 
-        return new PlayerAdvancementProgress(advancement.getKey().toString(), metadata, progress.isDone(), criteria);
+        return new PlayerAdvancementProgress(advancement.getKey().toString(), metadata, progress.isDone(), awardedDate);
     }
 
     private AdvancementMetadata buildMetadata(Advancement advancement) {
@@ -80,12 +73,13 @@ public class AdvancementManager implements ComponentSerializer {
         return iconMaterial.name().toLowerCase();
     }
 
-    private Map<String, Date> getCriteria(AdvancementProgress progress) {
+    private Date getAwardedDate(AdvancementProgress progress) {
         return progress.getAwardedCriteria()
                 .stream()
-                .map(criteria -> Map.entry(criteria, Objects.requireNonNull(progress.getDateAwarded(criteria))))
-                .filter(entry -> entry.getValue() != null)
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+                .map(progress::getDateAwarded)
+                .filter(Objects::nonNull)
+                .max(Date::compareTo)
+                .orElse(null);
     }
 
     private boolean isRecipe(Advancement advancement) {

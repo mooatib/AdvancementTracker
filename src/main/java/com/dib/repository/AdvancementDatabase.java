@@ -24,11 +24,17 @@ public class AdvancementDatabase {
 
     public void initializeDatabase() {
         try (Statement stmt = getConnection().createStatement()) {
-            stmt.execute(Queries.getCreateTableQuery());
+            createTables(stmt);
             logger.info("Database initialized successfully");
         } catch (SQLException e) {
             logger.log(Level.SEVERE, "Failed to initialize database", e);
         }
+    }
+
+    private static void createTables(Statement stmt) throws SQLException {
+        stmt.execute(Queries.CREATE_ADVANCEMENT_TABLE);
+        stmt.execute(Queries.CREATE_PLAYER_TABLE);
+        stmt.execute(Queries.CREATE_PLAYER_ADVANCEMENT_TABLE);
     }
 
     public Connection getConnection() throws SQLException {

@@ -3,8 +3,6 @@ package com.dib.model.web;
 import com.dib.model.PlayerAdvancement;
 import com.dib.model.PlayerAdvancementProgress;
 
-import java.util.Objects;
-
 public class HtmlTemplates {
     public static class PageWrapper {
         public static String getHeader() {
@@ -220,9 +218,9 @@ public class HtmlTemplates {
                     """;
         }
 
-        public static String render(PlayerAdvancement player) {
+        public static String render(PlayerAdvancement player, int advancementCount) {
             String avatarUrl = "https://mc-heads.net/avatar/" + player.getName() + "/64";
-
+            double progressPercentage = computeProgressPercentage(player.getAdvancements().size(), advancementCount);
             return String.format("""
                             <div class="player-card">
                                 <div class="player-header">
@@ -247,10 +245,16 @@ public class HtmlTemplates {
                     player.getName(),
                     player.getName(),
                     player.completedAdvancements().size(),
-                    player.getTotalAdvancements(),
-                    player.getProgressPercentage(),
-                    player.getProgressPercentage()
+                    advancementCount,
+                    progressPercentage,
+                    progressPercentage
             );
+        }
+
+        private static double computeProgressPercentage(int completedAdvancementCount, int advancementCount) {
+            return advancementCount > 0
+                    ? (completedAdvancementCount * 100.0 / advancementCount)
+                    : 0.0;
         }
 
         public static String renderClose() {
@@ -284,7 +288,7 @@ public class HtmlTemplates {
                             border-color: #ffffff;
                         }
                     
-                        .advancement.completed {
+                        .advancement.awarded {
                           background: rgba(185, 143, 44, 1);
                           box-shadow:
                            inset 0 3px rgb(219, 162, 19),
@@ -322,7 +326,7 @@ public class HtmlTemplates {
                             text-shadow: 1px 1px 0px #3e3e3e;
                         }
                     
-                        .advancement.completed .advancement-title {
+                        .advancement.awarded .advancement-title {
                             color: #fff;
                             text-shadow: 1px 1px 0px #000000;
                         }
@@ -351,12 +355,12 @@ public class HtmlTemplates {
                             flex-shrink: 0;
                         }
                     
-                        .advancement.completed .advancement-status {
+                        .advancement.awarded .advancement-status {
                             color: #55ff55;
                             background: rgba(85, 255, 85, 0.2);
                         }
                     
-                        .advancement:not(.completed) .advancement-status {
+                        .advancement:not(.awarded) .advancement-status {
                             color: #ff5555;
                             background: rgba(255, 85, 85, 0.2);
                         }
@@ -373,7 +377,7 @@ public class HtmlTemplates {
                             margin: 2px 0;
                         }
                     
-                        .criteria-completed {
+                        .criteria-awarded {
                             color: #55ff55;
                         }
                     </style>
@@ -381,7 +385,7 @@ public class HtmlTemplates {
         }
 
         public static String render(PlayerAdvancementProgress advancement) {
-            String completedClass = advancement.completed() ? "completed" : "";
+            String completedClass = advancement.awarded() ? "awarded" : "";
             String icon = "textures/" + advancement.metadata().iconName() + ".png";
 
             StringBuilder html = new StringBuilder();
@@ -397,14 +401,6 @@ public class HtmlTemplates {
                     getAdvancementTitle(advancement),
                     getAdvancementDescription(advancement)
             ));
-
-            if (advancement.criteria() != null && !advancement.criteria().isEmpty() && !advancement.completed()) {
-                html.append("<div class=\"advancement-criteria\">");
-                html.append("Criteria: ");
-                int completed = (int) advancement.criteria().values().stream().filter(Objects::nonNull).count();
-                html.append(String.format("%d/%d", completed, advancement.criteria().size()));
-                html.append("</div>");
-            }
 
             html.append("""
                         </div>
@@ -429,108 +425,6 @@ public class HtmlTemplates {
                 return advancement.metadata().description();
             }
             return "Complete this advancement";
-        }
-    }
-
-    /**
-     * Filter/Sort controls component
-     */
-    public static class FilterControls {
-        public static String getStyle() {
-            return """
-                    <style>
-                        .controls {
-                            background: rgba(0, 0, 0, 0.5);
-                            border: 3px solid #5a5a5a;
-                            padding: 20px;
-                            margin-bottom: 30px;
-                            border-radius: 8px;
-                            display: flex;
-                            gap: 20px;
-                            flex-wrap: wrap;
-                            align-items: center;
-                        }
-                    
-                        .control-group {
-                            display: flex;
-                            align-items: center;
-                            gap: 10px;
-                        }
-                    
-                        .control-label {
-                            color: #ffff55;
-                            text-shadow: 2px 2px 0px #3f3f3f;
-                            font-size: 16px;
-                        }
-                    
-                        .mc-button {
-                            background: linear-gradient(to bottom, #7a7a7a 0%, #5a5a5a 100%);
-                            border: 2px solid #000;
-                            box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.3);
-                            color: #fff;
-                            padding: 8px 16px;
-                            cursor: pointer;
-                            font-family: 'Minecraft Regular', monospace;
-                            font-size: 14px;
-                            text-shadow: 1px 1px 0px #3f3f3f;
-                            transition: all 0.1s;
-                        }
-                    
-                        .mc-button:hover {
-                            background: linear-gradient(to bottom, #8a8a8a 0%, #6a6a6a 100%);
-                        }
-                    
-                        .mc-button:active {
-                            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.5);
-                        }
-                    
-                        .mc-button.active {
-                            background: linear-gradient(to bottom, #55ff55 0%, #33dd33 100%);
-                            color: #000;
-                            text-shadow: 1px 1px 0px rgba(255, 255, 255, 0.5);
-                        }
-                    </style>
-                    """;
-        }
-
-        public static String render() {
-            return """
-                    <div class="controls">
-                        <div class="control-group">
-                            <span class="control-label">Sort By:</span>
-                            <button class="mc-button active" onclick="sortBy('name')">Name</button>
-                            <button class="mc-button" onclick="sortBy('progress')">Progress</button>
-                            <button class="mc-button" onclick="sortBy('completed')">Completed</button>
-                        </div>
-                        <div class="control-group">
-                            <span class="control-label">Filter:</span>
-                            <button class="mc-button active" onclick="filterBy('all')">All</button>
-                            <button class="mc-button" onclick="filterBy('completed')">Completed</button>
-                            <button class="mc-button" onclick="filterBy('incomplete')">Incomplete</button>
-                        </div>
-                    </div>
-                    <script>
-                        function sortBy(type) {
-                            document.querySelectorAll('.controls .mc-button').forEach(btn => {
-                                if(btn.textContent.toLowerCase().includes(type)) {
-                                    btn.classList.add('active');
-                                } else if(!btn.onclick.toString().includes('filterBy')) {
-                                    btn.classList.remove('active');
-                                }
-                            });
-                        }
-                    
-                        function filterBy(type) {
-                            document.querySelectorAll('.controls .mc-button').forEach(btn => {
-                                if(btn.textContent.toLowerCase() === type) {
-                                    btn.classList.add('active');
-                                } else if(btn.onclick.toString().includes('filterBy')) {
-                                    btn.classList.remove('active');
-                                }
-                            });
-                        }
-                    </script>
-                    """;
         }
     }
 }
