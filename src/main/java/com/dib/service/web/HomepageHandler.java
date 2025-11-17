@@ -22,7 +22,7 @@ public class HomepageHandler implements HttpHandler {
     @Override
     public void handle(HttpExchange exchange) throws IOException {
         int playerCount = server.getOnlinePlayers().size();
-        byte[] page = Homepage.renderPage(advancementManager.get(), playerCount);
+        byte[] page = Homepage.renderPage(advancementManager.get(), playerCount, advancementManager.countAdvancements());
         exchange.sendResponseHeaders(200, page.length);
         OutputStream response = exchange.getResponseBody();
         response.write(page);

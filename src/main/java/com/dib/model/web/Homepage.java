@@ -7,7 +7,7 @@ import java.util.Map;
 import java.util.UUID;
 
 public class Homepage {
-    public static byte[] renderPage(Map<UUID, PlayerAdvancement> playerAdvancements, int playerCount) {
+    public static byte[] renderPage(Map<UUID, PlayerAdvancement> playerAdvancements, int playerCount, int advancementCount) {
         StringBuilder html = new StringBuilder();
 
         html.append(HtmlTemplates.PageWrapper.getHeader());
@@ -24,15 +24,12 @@ public class Homepage {
                 , playerCount));
         html.append(HtmlTemplates.PlayerCard.getStyle());
         html.append(HtmlTemplates.AdvancementCard.getStyle());
-        html.append(HtmlTemplates.FilterControls.getStyle());
-
-        //html.append(HtmlTemplates.FilterControls.render());
 
         for (PlayerAdvancement player : playerAdvancements.values()) {
-            html.append(HtmlTemplates.PlayerCard.render(player));
+            html.append(HtmlTemplates.PlayerCard.render(player, advancementCount));
 
             for (PlayerAdvancementProgress advancement : player.getAdvancements().values()) {
-                if (advancement.completed()) {
+                if (advancement.awarded()) {
                     html.append(HtmlTemplates.AdvancementCard.render(advancement));
                 }
             }

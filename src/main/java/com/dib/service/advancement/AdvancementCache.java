@@ -1,43 +1,37 @@
 package com.dib.service.advancement;
 
 import com.dib.model.PlayerAdvancement;
-import com.dib.repository.AdvancementRepository;
+import com.dib.model.PlayerAdvancementProgress;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 public class AdvancementCache {
     private final Map<UUID, PlayerAdvancement> playerAdvancements;
-    private final AdvancementRepository repository;
 
-    public AdvancementCache(AdvancementRepository repository) {
-        this.repository = repository;
-        this.playerAdvancements = repository.load();
+    public AdvancementCache(Map<UUID, PlayerAdvancement> playerAdvancements) {
+        this.playerAdvancements = playerAdvancements;
     }
 
     public Map<UUID, PlayerAdvancement> get() {
         return playerAdvancements;
     }
 
-    //TODO : Remove unused
-    public Map<UUID, PlayerAdvancement> getCompleted() {
-        return playerAdvancements.entrySet().stream()
-                .collect(Collectors.toMap(
-                        Map.Entry::getKey,
-                        entry -> {
-                            PlayerAdvancement pa = entry.getValue();
-                            return new PlayerAdvancement(pa.getId(), pa.getName(), pa.completedAdvancements());
-                        }
-                ));
-    }
-
     public PlayerAdvancement get(UUID id) {
         return playerAdvancements.get(id);
     }
 
-    public void setPlayerAdvancement(UUID id, PlayerAdvancement playerAdvancement) {
-        playerAdvancements.put(id, playerAdvancement);
-        repository.save(id, playerAdvancement);
+    public void putPlayerAdvancement(UUID id, String name, PlayerAdvancementProgress advancement) {
+        if (playerAdvancements.containsKey(id)) {
+            PlayerAdvancement existing = get(id);
+
+            Map<String, PlayerAdvancementProgress> updatedAdvancements = new HashMap<>(existing.getAdvancements());
+            updatedAdvancements.put(advancement.key(), advancement);
+
+            playerAdvancements.put(id, new PlayerAdvancement(id, name, updatedAdvancements));
+        } else {
+            playerAdvancements.put(id, new PlayerAdvancement(id, name, Map.of(advancement.key(), advancement)));
+        }
     }
 }
