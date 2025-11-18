@@ -1,5 +1,6 @@
 package com.dib;
 
+import com.dib.commands.ProgressCommand;
 import com.dib.repository.AdvancementRepository;
 import com.dib.service.advancement.AdvancementCache;
 import com.dib.service.advancement.AdvancementListener;
@@ -9,6 +10,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.IOException;
+import java.util.List;
 
 public class AdvancementTrackerPlugin extends JavaPlugin {
 
@@ -27,6 +29,10 @@ public class AdvancementTrackerPlugin extends JavaPlugin {
     @Override
     public void onEnable() {
         Bukkit.getPluginManager().registerEvents(listener, this);
+        this.getServer().getCommandMap().register(
+                this.getName().toLowerCase(),
+                new ProgressCommand("progress", "Get advancement progress", "/progress <advancement>", List.of())
+        );
         try {
             webServer.start();
         } catch (IOException e) {
