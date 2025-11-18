@@ -120,6 +120,46 @@ public class HtmlTemplates {
                             transition: transform 0.2s, box-shadow 0.2s;
                         }
                     
+                        .player-card.diamond {
+                            box-shadow:
+                                inset 0 6px rgb(79, 235, 217),
+                                inset 0 -6px rgb(25, 119, 126),
+                                inset 6px 0 rgb(79, 235, 217),
+                                inset -6px 0 rgb(25, 119, 126);
+                        }
+                    
+                        .player-card.emerald {
+                            box-shadow:
+                                inset 0 6px rgb(30, 222, 102),
+                                inset 0 -6px rgb(8, 88, 8),
+                                inset 6px 0 rgb(30, 222, 102),
+                                inset -6px 0 rgb(8, 88, 8);
+                        }
+                    
+                        .player-card.gold {
+                            box-shadow:
+                                inset 0 6px rgb(250, 215, 79),
+                                inset 0 -6px rgb(180, 104, 24),
+                                inset 6px 0 rgb(250, 215, 79),
+                                inset -6px 0 rgb(180, 104, 24);
+                        }
+                    
+                        .player-card.iron {
+                            box-shadow:
+                                inset 0 6px rgb(217, 217, 217),
+                                inset 0 -6px rgb(99, 99, 99),
+                                inset 6px 0 rgb(217, 217, 217),
+                                inset -6px 0 rgb(99, 99, 99);
+                        }
+                    
+                        .player-card.copper {
+                            box-shadow:
+                                inset 0 6px rgb(232, 126, 90),
+                                inset 0 -6px rgb(158, 73, 46),
+                                inset 6px 0 rgb(232, 126, 90),
+                                inset -6px 0 rgb(158, 73, 46);
+                        }
+                    
                         .player-header {
                             display: flex;
                             align-items: center;
@@ -146,6 +186,34 @@ public class HtmlTemplates {
                             color: #55ff55;
                             text-shadow: 2px 2px 0px #000000;
                             margin-bottom: 5px;
+                        }
+                    
+                        .player-rank {
+                            font-size: 32px;
+                            font-weight: bold;
+                            color: #ffffff;
+                            text-shadow: 3px 3px 0px #000000;
+                            padding: 0 15px;
+                        }
+                    
+                        .player-rank.diamond {
+                            color: rgb(79, 235, 217);
+                        }
+                    
+                        .player-rank.emerald {
+                            color: rgb(30, 222, 102);
+                        }
+                    
+                        .player-rank.gold {
+                            color: rgb(250, 215, 79);
+                        }
+                    
+                        .player-rank.iron {
+                            color: rgb(217, 217, 217);
+                        }
+                    
+                        .player-rank.copper {
+                            color: rgb(232, 126, 90);
                         }
                     
                         .player-stats {
@@ -218,11 +286,19 @@ public class HtmlTemplates {
                     """;
         }
 
-        public static String render(PlayerAdvancement player, int advancementCount) {
+        public static String render(PlayerAdvancement player, int playerRank, int advancementCount) {
             String avatarUrl = "https://mc-heads.net/avatar/" + player.getName() + "/64";
             double progressPercentage = computeProgressPercentage(player.getAdvancements().size(), advancementCount);
+            String rankClass = switch (playerRank) {
+                case 1 -> "diamond";
+                case 2 -> "emerald";
+                case 3 -> "gold";
+                case 4 -> "iron";
+                case 5 -> "copper";
+                default -> "";
+            };
             return String.format("""
-                            <div class="player-card">
+                            <div class="player-card %s">
                                 <div class="player-header">
                                     <img src="%s" alt="%s" class="player-avatar" onerror="this.src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='">
                                     <div class="player-info">
@@ -234,6 +310,7 @@ public class HtmlTemplates {
                                             </span>
                                         </div>
                                     </div>
+                                    <div class="player-rank %s">#%d</div>
                                 </div>
                                 <div class="progress-bar-container">
                                     <div class="progress-bar" style="width: %.1f%%"></div>
@@ -241,11 +318,14 @@ public class HtmlTemplates {
                                 </div>
                                 <div class="advancements-list">
                             """,
+                    rankClass,
                     avatarUrl,
                     player.getName(),
                     player.getName(),
                     player.completedAdvancements().size(),
                     advancementCount,
+                    rankClass,
+                    playerRank,
                     progressPercentage,
                     progressPercentage
             );
@@ -265,9 +345,6 @@ public class HtmlTemplates {
         }
     }
 
-    /**
-     * Advancement card component - displays individual advancement
-     */
     public static class AdvancementCard {
         public static String getStyle() {
             return """

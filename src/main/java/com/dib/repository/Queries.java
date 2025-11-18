@@ -70,6 +70,6 @@ public class Queries {
                 (SELECT COUNT(*)
                 FROM player_advancements pa2
                 WHERE pa2.fk_player_id = p.player_id) DESC,
-                pa.awarded_date DESC
+                pa.awarded_date
             """;
 }

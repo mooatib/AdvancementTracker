@@ -13,20 +13,21 @@ public class Homepage {
         html.append(HtmlTemplates.PageWrapper.getHeader());
         html.append(String.format(
                 """
-                                <body>
-                                    <div class="container">
-                                        <div class="header">
-                                            <h1>🏆 Advancements leaderboard 🏆</h1>
-                                            <h3>Server: mc.araux.net | Players Online: %d</h3>
-                                        </div>
-                                    <div class="players-grid">
+                            <body>
+                                <div class="container">
+                                    <div class="header">
+                                        <h1>🏆 Advancements leaderboard 🏆</h1>
+                                        <h3>Server: mc.araux.net | Players Online: %d</h3>
+                                    </div>
+                                <div class="players-grid">
                         """
                 , playerCount));
         html.append(HtmlTemplates.PlayerCard.getStyle());
         html.append(HtmlTemplates.AdvancementCard.getStyle());
 
+        int playerRank = 1;
         for (PlayerAdvancement player : playerAdvancements.values()) {
-            html.append(HtmlTemplates.PlayerCard.render(player, advancementCount));
+            html.append(HtmlTemplates.PlayerCard.render(player, playerRank, advancementCount));
 
             for (PlayerAdvancementProgress advancement : player.getAdvancements().values()) {
                 if (advancement.awarded()) {
@@ -35,6 +36,7 @@ public class Homepage {
             }
 
             html.append(HtmlTemplates.PlayerCard.renderClose());
+            playerRank++;
         }
 
         html.append(HtmlTemplates.PageWrapper.getFooter());
