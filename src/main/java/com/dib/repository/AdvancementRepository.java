@@ -7,9 +7,9 @@ import com.dib.model.PlayerAdvancementProgress;
 import java.io.File;
 import java.sql.*;
 import java.time.LocalDateTime;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -123,7 +123,7 @@ public class AdvancementRepository {
     }
 
     public Map<UUID, PlayerAdvancement> load() {
-        Map<UUID, PlayerAdvancement> playerAdvancements = new ConcurrentHashMap<>();
+        Map<UUID, PlayerAdvancement> playerAdvancements = new LinkedHashMap<>();
 
         try {
             Connection conn = advancementDatabase.getConnection();
@@ -136,10 +136,9 @@ public class AdvancementRepository {
 
                 PlayerAdvancement playerAdvancement = playerAdvancements.computeIfAbsent(
                         playerId,
-                        id -> new PlayerAdvancement(playerId, playerName, new ConcurrentHashMap<>())
+                        id -> new PlayerAdvancement(playerId, playerName, new LinkedHashMap<>())
                 );
 
-                // Check if player has any advancements
                 String advancementId = rs.getString("fk_advancement_id");
                 if (advancementId != null) {
                     Timestamp awardedDate = rs.getTimestamp("awarded_date");

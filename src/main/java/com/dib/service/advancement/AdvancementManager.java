@@ -23,8 +23,8 @@ public class AdvancementManager implements ComponentSerializer {
         this.repository = repository;
     }
 
-    public Map<UUID, PlayerAdvancement> get() {
-        return cache.get();
+    public Map<UUID, PlayerAdvancement> getCache() {
+        return cache.getSorted();
     }
 
     public void updatePlayerAdvancement(Player player, Advancement advancement) {
@@ -34,8 +34,8 @@ public class AdvancementManager implements ComponentSerializer {
                 repository.saveAdvancement(progress.key(), progress.metadata());
             }
             if (progress.awarded()) {
-                cache.putPlayerAdvancement(player.getUniqueId(), player.getName(), progress);
                 repository.savePlayerAdvancement(player.getUniqueId(), player.getName(), progress);
+                cache.updatePlayerEntry(player.getUniqueId(), player.getName(), progress);
             }
         }
     }
@@ -49,7 +49,6 @@ public class AdvancementManager implements ComponentSerializer {
         while (advancementIterator.hasNext()) {
             updatePlayerAdvancement(player, advancementIterator.next());
         }
-
     }
 
     private PlayerAdvancementProgress buildPlayerAdvancement(Player player, Advancement advancement) {
