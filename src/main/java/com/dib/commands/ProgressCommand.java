@@ -25,7 +25,8 @@ public class ProgressCommand extends BukkitCommand {
         HOT_TOURIST_DESTINATIONS("nether/explore_nether"),
         TWO_BY_TWO("husbandry/bred_all_animals"),
         BALANCED_DIET("husbandry/balanced_diet"),
-        COMPLETE_CATALOGUE("husbandry/complete_catalogue");
+        COMPLETE_CATALOGUE("husbandry/complete_catalogue"),
+        THE_WHOLE_PACK("husbandry/whole_pack");
 
         private final String key;
 
@@ -83,8 +84,9 @@ public class ProgressCommand extends BukkitCommand {
     /**
      * Sends the formatted progress message to the player.
      * * @param player The player to send the message to.
-     * @param advName The command input name of the advancement.
-     * @param progress The AdvancementProgress object.
+     *
+     * @param advName       The command input name of the advancement.
+     * @param progress      The AdvancementProgress object.
      * @param showCompleted Whether to show the list of completed criteria.
      */
     private void sendProgressMessage(Player player, String advName, AdvancementProgress progress, boolean showCompleted) {
@@ -103,7 +105,12 @@ public class ProgressCommand extends BukkitCommand {
 
         // Display remaining criteria
         player.sendMessage(ChatColor.RED + "\nRemaining :");
-        player.sendMessage(ChatColor.WHITE + formatCriteriaList(remaining));
+        if (progress.getAdvancement().toString().equals("adventure/trim_with_all_exclusive_armor_patterns")) {
+            player.sendMessage(ChatColor.WHITE + formatCriteriaList(remaining));
+        } else {
+            player.sendMessage(ChatColor.WHITE + formatCriteriaList(remaining));
+        }
+
 
         // Optional display of awarded criteria
         if (showCompleted && !awarded.isEmpty()) {
@@ -115,6 +122,7 @@ public class ProgressCommand extends BukkitCommand {
     /**
      * Sends the usage and available advancements list to the player (DRY principle).
      * * @param player The player to send the help message to.
+     *
      * @param errorHeader The usage or error message to display first.
      */
     private void sendHelp(Player player, String errorHeader) {
@@ -128,6 +136,7 @@ public class ProgressCommand extends BukkitCommand {
     /**
      * Uses Streams to format the criteria list neatly (no trailing comma).
      * * @param criteria The collection of technical criteria names.
+     *
      * @return A comma-separated, colored list of user-friendly names.
      */
     private String formatCriteriaList(Collection<String> criteria) {
@@ -135,17 +144,37 @@ public class ProgressCommand extends BukkitCommand {
                 .map(this::prettifyName)
                 .map(s -> ChatColor.GOLD + s + ChatColor.WHITE)
                 .collect(Collectors.joining(", "));
+
     }
 
     /**
      * Converts the technical criteria name (e.g., 'minecraft:oak_log') into a
      * user-friendly, capitalized name (e.g., 'Oak Log').
-     * * @param raw The technical name.
+     * Handles specific parsing logic for Smithing Templates.
+     *
+     * @param raw The technical name.
      * @return The pretty name.
      */
     private String prettifyName(String raw) {
-        // Standard cleanup (removing minecraft: namespace, replacing underscores)
-        String clean = raw.replace("minecraft:", "").replace("_", " ");
+        // Standard cleanup (removing minecraft: namespace)
+        String clean = raw.replace("minecraft:", "");
+
+        // SPECIAL HANDLING: Smithing Templates
+        // Raw format example: armor_trimmed_silence_armor_trim_smithing_template_smithing_trim
+        // We want to extract just "silence"
+        if (clean.startsWith("armor_trimmed_")) {
+            // Remove the prefix
+            clean = clean.replace("armor_trimmed_", "");
+
+            // Remove the suffix starting at "_armor_trim"
+            int suffixIndex = clean.indexOf("_armor_trim");
+            if (suffixIndex != -1) {
+                clean = clean.substring(0, suffixIndex);
+            }
+        }
+
+        // Standard formatting (replace underscores with spaces)
+        clean = clean.replace("_", " ");
 
         // Efficient capitalization logic
         char[] chars = clean.toCharArray();
