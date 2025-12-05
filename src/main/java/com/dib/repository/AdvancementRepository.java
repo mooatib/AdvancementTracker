@@ -110,7 +110,6 @@ public class AdvancementRepository {
                 paStmt.close();
 
                 conn.commit();
-                logger.info("Successfully saved advancement for player: " + playerName);
             } catch (Exception e) {
                 conn.rollback();
                 throw e;
